@@ -1,0 +1,55 @@
+/* Yellow input cells */
+.form-control, .selectize-input {
+  background-color: #FFFACD !important;
+}
+
+/* Orange result cells */
+.result-orange {
+  background-color: #FFB347;
+  color: #000;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Red result text */
+.result-red {
+  color: #CC0000;
+  font-weight: bold;
+}
+
+/* Crude data box */
+.crude-box {
+  border: 2px solid #CC0000;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+/* Result label */
+.result-label {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+/* Compact numeric inputs */
+.compact-input .form-control {
+  width: 100px;
+}
+
+/* Table styling */
+.epi-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+/* Stratum header */
+.stratum-header {
+  background-color: #e8e8e8;
+  font-weight: bold;
+  padding: 4px 8px;
+  margin-top: 8px;
+  border-left: 3px solid #666;
+}
