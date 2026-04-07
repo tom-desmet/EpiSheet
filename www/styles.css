@@ -214,8 +214,10 @@ body {
   line-height: 1.2;
 }
 .tbl td .form-group {
-  margin: 0 auto;        /* centre the container block within the cell */
-  padding: 4px 4px 4px;
+  display: inline-block !important;  /* allows text-align:center on parent to centre it */
+  margin: 0;
+  padding: 4px 2px;
+  vertical-align: middle;
 }
 .tbl .form-control {
   text-align: center !important;
@@ -340,8 +342,26 @@ body {
   border: none;
   padding: 0 0 0 2px;
   line-height: 1;
+  vertical-align: middle;
 }
 .info-mark:hover { opacity: 1; }
+
+/* ── Tooltip box ─────────────────────────────────────────────────────────────── */
+#epi-tip {
+  display: none;
+  position: absolute;
+  background: #fff;
+  border: 0.5px solid #d0dde3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #4a6070;
+  max-width: 190px;
+  z-index: 9000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  pointer-events: none;
+}
 
 /* ── Interpretation block ────────────────────────────────────────────────────── */
 .conclusion {
