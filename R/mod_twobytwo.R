@@ -21,14 +21,14 @@ twobytwoUI <- function(id) {
             tags$tbody(
               tags$tr(
                 tags$td(class = "cl", "Exposed"),
-                tags$td(numericInput(ns("ca"), NULL, value = NA, min = 0, width = "80px")),
-                tags$td(numericInput(ns("cb"), NULL, value = NA, min = 0, width = "80px")),
+                tags$td(numericInput(ns("ca"), tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "80px")),
+                tags$td(numericInput(ns("cb"), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "80px")),
                 tags$td(class = "tot", uiOutput(ns("n1"), inline = TRUE))
               ),
               tags$tr(
                 tags$td(class = "cl", "Unexposed"),
-                tags$td(numericInput(ns("cc"), NULL, value = NA, min = 0, width = "80px")),
-                tags$td(numericInput(ns("cd"), NULL, value = NA, min = 0, width = "80px")),
+                tags$td(numericInput(ns("cc"), tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "80px")),
+                tags$td(numericInput(ns("cd"), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "80px")),
                 tags$td(class = "tot", uiOutput(ns("n0"), inline = TRUE))
               ),
               tags$tr(
@@ -155,22 +155,27 @@ twobytwoServer <- function(id) {
     output$results <- renderUI({
       r <- computed()
       nnt_label <- ifelse(r$RD_sign > 0, "NNH", "NNT")
+      fmt_p <- function(x) {
+        if (is.na(x) || is.nan(x)) return("\u2014")
+        if (x < 0.0001) return("< 0.0001")
+        formatC(x, digits = 4, format = "f")
+      }
       tags$div(class = "metrics",
-        mk("Risk Ratio (RR)", fmt4(r$RR),
-           paste0("95% CI: ", fmt4(r$rr95[1]), "\u2013", fmt4(r$rr95[2])),
+        mk("Risk Ratio (RR)", fmt2(r$RR),
+           paste0("95% CI: ", fmt2(r$rr95[1]), "\u2013", fmt2(r$rr95[2])),
            "m-primary wide"),
-        mk("Odds Ratio (OR)",  fmt4(r$OR),
-           paste0("95% CI: ", fmt4(r$or95[1]), "\u2013", fmt4(r$or95[2])),
+        mk("Odds Ratio (OR)", fmt2(r$OR),
+           paste0("95% CI: ", fmt2(r$or95[1]), "\u2013", fmt2(r$or95[2])),
            "m-blue"),
-        mk("Risk Difference",  fmt4(r$RD),
-           paste0("95% CI: ", fmt4(r$rd95[1]), "\u2013", fmt4(r$rd95[2])),
+        mk("Risk Difference", fmt2(r$RD),
+           paste0("95% CI: ", fmt2(r$rd95[1]), "\u2013", fmt2(r$rd95[2])),
            "m-blue"),
-        mk("chi2 (no cc)", paste0(fmt4(r$chi2),    "  p=", fmt4(r$p_chi2)),    cls = "m-teal"),
-        mk("chi2 (cc)",    paste0(fmt4(r$chi2_cc), "  p=", fmt4(r$p_chi2_cc)), cls = "m-teal"),
-        mk("Fisher exact p",   fmt4(r$p_fisher),  cls = "m-purple"),
-        mk("AR (exposed)",     fmt4(r$ar_exp),    cls = "m-purple"),
-        mk("AR (population)",  fmt4(r$ar_pop),    cls = "m-blue"),
-        mk(nnt_label,          fmt2(r$nnt),       cls = "m-blue")
+        mk("\u03c7\u00b2 (no cc)", fmt2(r$chi2),    paste0("p = ", fmt_p(r$p_chi2)),    "m-teal"),
+        mk("\u03c7\u00b2 (cc)",    fmt2(r$chi2_cc), paste0("p = ", fmt_p(r$p_chi2_cc)), "m-teal"),
+        mk("Fisher exact p", fmt_p(r$p_fisher), cls = "m-purple"),
+        mk("AR (exposed)",   fmt2(r$ar_exp),    cls = "m-purple"),
+        mk("AR (population)", fmt2(r$ar_pop),   cls = "m-blue"),
+        mk(nnt_label,         fmt2(r$nnt),       cls = "m-blue")
       )
     })
 
@@ -178,9 +183,10 @@ twobytwoServer <- function(id) {
       r <- computed()
       dir   <- ifelse(r$RR > 1, "higher", "lower")
       pct   <- abs(round((r$RR - 1) * 100))
-      assoc <- ifelse(r$p_chi2 < 0.05,
-                      "statistically significant (p < 0.05)",
-                      "not statistically significant (p >= 0.05)")
+      p_ok  <- !is.na(r$p_chi2) && !is.nan(r$p_chi2)
+      assoc <- if (p_ok && r$p_chi2 < 0.05) "statistically significant (p < 0.05)" else
+               if (p_ok) "not statistically significant (p \u2265 0.05)" else
+               "unknown (check inputs)"
       tags$div(class = "conclusion",
         tags$div(class = "conc-head", "Interpretation"),
         tags$p(class = "conc-text",

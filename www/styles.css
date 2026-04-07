@@ -201,6 +201,23 @@ body {
   padding: 6px 10px;
   text-align: left;
 }
+/* numericInput inside tbl cells: center text, no label margin */
+.tbl .form-group { margin-bottom: 0; }
+.tbl .form-group label.cell-lbl {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: #005f6a;
+  opacity: 0.6;
+  text-align: center;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+.tbl .form-control {
+  text-align: center !important;
+  padding: 4px 4px !important;
+}
+
 .tbl td.tot {
   background: #eef3f5;
   font-size: 12px;
@@ -246,8 +263,8 @@ body {
 .calc-btn {
   width: 100%;
   padding: 10px;
-  background: #fff;
-  color: #165c7d;
+  background: #165c7d;
+  color: #fff;
   border: 1.5px solid #165c7d;
   border-radius: 8px;
   font-size: 13px;
@@ -256,7 +273,7 @@ body {
   letter-spacing: 0.02em;
   margin-top: 4px;
 }
-.calc-btn:hover { background: #edf2f8; }
+.calc-btn:hover { background: #0d4a66; }
 
 /* ── Metric cards ────────────────────────────────────────────────────────────── */
 .metrics {
