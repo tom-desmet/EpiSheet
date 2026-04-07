@@ -99,48 +99,49 @@ twobytwoServer <- function(id) {
     # Core computation, triggered by calculate button
     computed <- eventReactive(input$calc, {
       v <- vals()
-      a <- v$a; b <- v$b; c <- v$c; d <- v$d
+      # Rename to avoid shadowing base c()
+      ca <- v$a; cb <- v$b; cc <- v$c; cd <- v$d
       validate(
         need(!any(sapply(v, is.null)), "Enter all four cell counts."),
         need(all(sapply(v, function(x) x >= 0)), "All counts must be \u2265 0.")
       )
 
-      n1 <- a + b; n0 <- c + d
-      m1 <- a + c; m0 <- b + d
+      n1 <- ca + cb; n0 <- cc + cd
+      m1 <- ca + cc; m0 <- cb + cd
       N  <- n1 + n0
 
       validate(need(n1 > 0 && n0 > 0, "Row totals cannot be zero."))
-      validate(need(b > 0 && c > 0, "Cannot compute ratios: one or more cells are zero."))
+      validate(need(cb > 0 && cc > 0, "Cannot compute ratios: one or more cells are zero."))
 
-      p1 <- a / n1; p0 <- c / n0
+      p1 <- ca / n1; p0 <- cc / n0
       RR <- p1 / p0
       RD <- p1 - p0
-      OR <- (a * d) / (b * c)
+      OR <- (ca * cd) / (cb * cc)
 
       # CI (Taylor)
-      se_ln_rr <- sqrt(b/(a*n1) + d/(c*n0))
-      rr95 <- exp(log(RR) + c(-1,1) * 1.96  * se_ln_rr)
-      rr99 <- exp(log(RR) + c(-1,1) * 2.576 * se_ln_rr)
+      se_ln_rr <- sqrt(cb/(ca*n1) + cd/(cc*n0))
+      rr95 <- exp(log(RR) + c(-1, 1) * 1.96  * se_ln_rr)
+      rr99 <- exp(log(RR) + c(-1, 1) * 2.576 * se_ln_rr)
 
       se_rd <- sqrt(p1*(1-p1)/n1 + p0*(1-p0)/n0)
-      rd95 <- RD + c(-1,1) * 1.96  * se_rd
-      rd99 <- RD + c(-1,1) * 2.576 * se_rd
+      rd95 <- RD + c(-1, 1) * 1.96  * se_rd
+      rd99 <- RD + c(-1, 1) * 2.576 * se_rd
 
-      se_ln_or <- sqrt(1/a + 1/b + 1/c + 1/d)
-      or95 <- exp(log(OR) + c(-1,1) * 1.96  * se_ln_or)
-      or99 <- exp(log(OR) + c(-1,1) * 2.576 * se_ln_or)
+      se_ln_or <- sqrt(1/ca + 1/cb + 1/cc + 1/cd)
+      or95 <- exp(log(OR) + c(-1, 1) * 1.96  * se_ln_or)
+      or99 <- exp(log(OR) + c(-1, 1) * 2.576 * se_ln_or)
 
       # Chi-square
-      chi2    <- N * (a*d - b*c)^2 / (n1 * n0 * m1 * m0)
-      chi2_cc <- N * (max(0, abs(a*d - b*c) - N/2))^2 / (n1 * n0 * m1 * m0)
+      chi2    <- N * (ca*cd - cb*cc)^2 / (n1 * n0 * m1 * m0)
+      chi2_cc <- N * (max(0, abs(ca*cd - cb*cc) - N/2))^2 / (n1 * n0 * m1 * m0)
       p_chi2    <- pchisq(chi2,    1, lower.tail = FALSE)
       p_chi2_cc <- pchisq(chi2_cc, 1, lower.tail = FALSE)
 
-      p_fisher <- fisher.test(matrix(c(a, c, b, d), 2, 2))$p.value
+      p_fisher <- fisher.test(matrix(c(ca, cc, cb, cd), 2, 2))$p.value
 
       # Attributable risk
       ar_exp <- (p1 - p0) / p1
-      ar_pop <- (p1 * n1/N - p0 * n0/N) / (p1 * n1/N + p0 * n0/N)  # simplified population AR
+      ar_pop <- (p1 * n1/N - p0 * n0/N) / (p1 * n1/N + p0 * n0/N)
       nnt    <- 1 / abs(RD)
 
       list(RR=RR, rr95=rr95, rr99=rr99,
@@ -152,10 +153,11 @@ twobytwoServer <- function(id) {
     })
 
     metric <- function(label, value, sub = NULL, cls = "m-blue") {
+      sub_tag <- if (!is.null(sub)) tags$div(class = "metric-sub", sub) else NULL
       tags$div(class = paste("metric", cls),
         tags$div(class = "metric-label", label),
         tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
+        sub_tag
       )
     }
 
@@ -181,7 +183,7 @@ twobytwoServer <- function(id) {
         metric("AR (exposed)",   fmt4(r$ar_exp),   cls = "m-purple"),
         # Row 5
         metric("AR (population)", fmt4(r$ar_pop), cls = "m-blue"),
-        metric(if (r$RD > 0) "NNH" else "NNT", fmt2(r$nnt), cls = "m-blue")
+        metric(ifelse(r$RD > 0, "NNH", "NNT"), fmt2(r$nnt), cls = "m-blue")
       )
     })
 
