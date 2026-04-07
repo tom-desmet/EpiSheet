@@ -93,14 +93,6 @@ ccDataServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # Collect complete strata — all four cells non-NA and >= 0, at least one cell > 0 per row
     get_strata <- reactive({
       strata <- list()
@@ -228,23 +220,28 @@ ccDataServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric("MH Odds Ratio",
+        metric_card("MH Odds Ratio",
                fmt4(r$OR_mh),
                paste0(r$n_strata, " strat",
                       if (r$n_strata == 1) "um" else "a", " pooled"),
-               "m-primary wide"),
-        metric("95% CI (Woolf)",
+               "m-primary wide",
+               tip = "Mantel-Haenszel pooled odds ratio. The standard method for stratified case-control analysis."),
+        metric_card("95% CI (Woolf)",
                paste0(fmt4(r$ci_woolf95[1]), " \u2013 ", fmt4(r$ci_woolf95[2])),
-               cls = "m-blue"),
-        metric("99% CI (Woolf)",
+               cls = "m-blue",
+               tip = "Woolf confidence interval for the pooled odds ratio, based on the variance of ln(OR)."),
+        metric_card("99% CI (Woolf)",
                paste0(fmt4(r$ci_woolf99[1]), " \u2013 ", fmt4(r$ci_woolf99[2])),
-               cls = "m-blue"),
-        metric("Crude Odds Ratio",
+               cls = "m-blue",
+               tip = "99% confidence interval for the pooled odds ratio."),
+        metric_card("Crude Odds Ratio",
                crude_text,
-               cls = "m-teal"),
-        metric("P for Homogeneity",
+               cls = "m-teal",
+               tip = "Unadjusted odds ratio from the crude (unstratified) 2\u00d72 table."),
+        metric_card("P for Homogeneity",
                hom_text,
-               cls = "m-purple")
+               cls = "m-purple",
+               tip = "Woolf chi-square test for heterogeneity. Tests whether the OR is consistent across strata.")
       )
     })
 

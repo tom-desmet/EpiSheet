@@ -142,40 +142,40 @@ twobytwoServer <- function(id) {
       )
     })
 
-    mk <- function(label, value, sub = NULL, cls = "m-blue") {
-      sub_el <- if (!is.null(sub)) tags$div(class = "metric-sub", sub) else NULL
-      tags$div(
-        class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value",  value),
-        sub_el
-      )
+    fmt_p <- function(x) {
+      if (is.na(x) || is.nan(x)) return("\u2014")
+      if (x < 0.0001) return("< 0.0001")
+      formatC(x, digits = 4, format = "f")
     }
 
     output$results <- renderUI({
       r <- computed()
       nnt_label <- ifelse(r$RD_sign > 0, "NNH", "NNT")
-      fmt_p <- function(x) {
-        if (is.na(x) || is.nan(x)) return("\u2014")
-        if (x < 0.0001) return("< 0.0001")
-        formatC(x, digits = 4, format = "f")
-      }
       tags$div(class = "metrics",
-        mk("Risk Ratio (RR)", fmt2(r$RR),
+        metric_card("Risk Ratio (RR)", fmt2(r$RR),
            paste0("95% CI: ", fmt2(r$rr95[1]), "\u2013", fmt2(r$rr95[2])),
-           "m-primary wide"),
-        mk("Odds Ratio (OR)", fmt2(r$OR),
+           "m-primary wide",
+           "Ratio of disease risk in the exposed vs unexposed group. RR > 1 indicates increased risk."),
+        metric_card("Odds Ratio (OR)", fmt2(r$OR),
            paste0("95% CI: ", fmt2(r$or95[1]), "\u2013", fmt2(r$or95[2])),
-           "m-blue"),
-        mk("Risk Difference", fmt2(r$RD),
+           "m-blue",
+           "Ratio of the odds of disease in exposed vs unexposed. Approximates RR when disease is rare."),
+        metric_card("Risk Difference", fmt2(r$RD),
            paste0("95% CI: ", fmt2(r$rd95[1]), "\u2013", fmt2(r$rd95[2])),
-           "m-blue"),
-        mk("\u03c7\u00b2 (no cc)", fmt2(r$chi2),    paste0("p = ", fmt_p(r$p_chi2)),    "m-teal"),
-        mk("\u03c7\u00b2 (cc)",    fmt2(r$chi2_cc), paste0("p = ", fmt_p(r$p_chi2_cc)), "m-teal"),
-        mk("Fisher exact p", fmt_p(r$p_fisher), cls = "m-purple"),
-        mk("AR (exposed)",   fmt2(r$ar_exp),    cls = "m-purple"),
-        mk("AR (population)", fmt2(r$ar_pop),   cls = "m-blue"),
-        mk(nnt_label,         fmt2(r$nnt),       cls = "m-blue")
+           "m-blue",
+           "Absolute difference in disease probability between exposed and unexposed groups."),
+        metric_card("\u03c7\u00b2 (no cc)", fmt2(r$chi2),    paste0("p = ", fmt_p(r$p_chi2)),    "m-teal",
+           "Pearson chi-square test of association without continuity correction."),
+        metric_card("\u03c7\u00b2 (cc)",    fmt2(r$chi2_cc), paste0("p = ", fmt_p(r$p_chi2_cc)), "m-teal",
+           "Chi-square with Yates continuity correction. More conservative than uncorrected."),
+        metric_card("Fisher exact p", fmt_p(r$p_fisher), cls = "m-purple",
+           tip = "Exact p-value based on the hypergeometric distribution. Preferred for small cell counts."),
+        metric_card("AR (exposed)",   fmt2(r$ar_exp),    cls = "m-purple",
+           tip = "Attributable risk among the exposed: proportion of disease in the exposed group due to the exposure."),
+        metric_card("AR (population)", fmt2(r$ar_pop),   cls = "m-blue",
+           tip = "Population attributable risk: proportion of total disease in the population attributable to the exposure."),
+        metric_card(nnt_label, fmt2(r$nnt), cls = "m-blue",
+           tip = "Number needed to harm (NNH) or treat (NNT): how many people must be exposed to cause one additional case.")
       )
     })
 

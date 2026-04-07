@@ -92,14 +92,6 @@ rateDataServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # Collect stratum data — returns list of complete strata (all 4 fields non-NA and valid)
     get_strata <- reactive({
       strata <- list()
@@ -209,25 +201,31 @@ rateDataServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric("MH Rate Ratio",
+        metric_card("MH Rate Ratio",
                fmt4(r$RR_mh),
                paste0(r$n_strata, " strat", if (r$n_strata == 1) "um" else "a", " pooled"),
-               "m-primary wide"),
-        metric("95% Confidence Interval",
+               "m-primary wide",
+               tip = "Mantel-Haenszel pooled rate ratio across strata. Weighted average of stratum-specific rate ratios."),
+        metric_card("95% Confidence Interval",
                paste0(fmt4(r$ci95[1]), " \u2013 ", fmt4(r$ci95[2])),
-               cls = "m-blue"),
-        metric("99% Confidence Interval",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled rate ratio."),
+        metric_card("99% Confidence Interval",
                paste0(fmt4(r$ci99[1]), " \u2013 ", fmt4(r$ci99[2])),
-               cls = "m-blue"),
-        metric("Variance of ln(RR)",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled rate ratio."),
+        metric_card("Variance of ln(RR)",
                fmt4(r$var_ln),
-               cls = "m-teal"),
-        metric("P for Homogeneity",
+               cls = "m-teal",
+               tip = "Estimated variance of the natural log of the rate ratio. Used to compute confidence intervals."),
+        metric_card("P for Homogeneity",
                hom_text,
-               cls = "m-purple"),
-        metric("Crude Rate Ratio",
+               cls = "m-purple",
+               tip = "Chi-square test for heterogeneity across strata. Large value (small p) suggests the rate ratio differs between strata."),
+        metric_card("Crude Rate Ratio",
                crude_text,
-               cls = "m-teal")
+               cls = "m-teal",
+               tip = "Unadjusted rate ratio from the crude (unstratified) data.")
       )
     })
 

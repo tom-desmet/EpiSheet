@@ -61,6 +61,7 @@ ui <- fluidPage(
   useShinyjs(),
   tags$head(
     tags$link(rel = "stylesheet", href = "styles.css"),
+    tags$script(src = "tooltip.js"),
     tags$title("EpiSheet")
   ),
 

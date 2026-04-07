@@ -236,3 +236,25 @@ orange_val <- function(x, digits = 4) {
 red_val <- function(x, digits = 4) {
   tags$span(class = "result-red", fmt(x, digits))
 }
+
+# ── Shared metric card with optional ⓘ tooltip ───────────────────────────────
+# Used by all calculator modules.
+# label: card label text
+# value: main displayed value (string)
+# sub:   small sub-text (CI, unit) — optional
+# cls:   CSS class: "m-primary wide", "m-blue", "m-teal", "m-purple"
+# tip:   tooltip text shown on ⓘ click — NULL to omit button
+metric_card <- function(label, value, sub = NULL, cls = "m-blue", tip = NULL) {
+  tip_btn <- if (!is.null(tip)) {
+    tags$button(class = "info-mark", `data-tip` = tip, "\u24d8")
+  } else {
+    NULL
+  }
+  sub_el <- if (!is.null(sub)) tags$div(class = "metric-sub", sub) else NULL
+  tags$div(
+    class = paste("metric", cls),
+    tags$div(class = "metric-label", label, tip_btn),
+    tags$div(class = "metric-value",  value),
+    sub_el
+  )
+}

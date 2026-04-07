@@ -234,15 +234,6 @@ metaAnalysisServer <- function(id) {
       )
     })
 
-    # ── Metric card helper ─────────────────────────────────────────────────────
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Results panel output ───────────────────────────────────────────────────
     output$results <- renderUI({
       r           <- computed()

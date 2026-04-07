@@ -91,14 +91,6 @@ riskDataServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # Collect complete strata
     get_strata <- reactive({
       strata <- list()
@@ -262,30 +254,37 @@ riskDataServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric("MH Risk Ratio",
+        metric_card("MH Risk Ratio",
                fmt4(r$RR_mh),
                paste0(r$n_strata, " strat",
                       if (r$n_strata == 1) "um" else "a", " pooled"),
-               "m-primary wide"),
-        metric("95% CI for Risk Ratio",
+               "m-primary wide",
+               tip = "Mantel-Haenszel pooled risk ratio. Weighted average of stratum-specific risk ratios."),
+        metric_card("95% CI for Risk Ratio",
                paste0(fmt4(r$ci_rr95[1]), " \u2013 ", fmt4(r$ci_rr95[2])),
-               cls = "m-blue"),
-        metric("99% CI for Risk Ratio",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled risk ratio."),
+        metric_card("99% CI for Risk Ratio",
                paste0(fmt4(r$ci_rr99[1]), " \u2013 ", fmt4(r$ci_rr99[2])),
-               cls = "m-blue"),
-        metric("Pooled Risk Difference",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled risk ratio."),
+        metric_card("Pooled Risk Difference",
                fmt4(r$RD_pool),
                paste0("95% CI: ", fmt4(r$ci_rd95[1]), "\u2013", fmt4(r$ci_rd95[2])),
-               cls = "m-teal"),
-        metric("99% CI for Risk Difference",
+               cls = "m-teal",
+               tip = "Mantel-Haenszel pooled absolute risk difference across strata."),
+        metric_card("99% CI for Risk Difference",
                paste0(fmt4(r$ci_rd99[1]), " \u2013 ", fmt4(r$ci_rd99[2])),
-               cls = "m-teal"),
-        metric("P for Homogeneity",
+               cls = "m-teal",
+               tip = "Confidence interval for the pooled risk difference."),
+        metric_card("P for Homogeneity",
                hom_text,
-               cls = "m-purple"),
-        metric("Crude Risk Ratio",
+               cls = "m-purple",
+               tip = "Woolf chi-square test for heterogeneity. Tests whether the risk ratio is the same across strata."),
+        metric_card("Crude Risk Ratio",
                crude_text,
-               cls = "m-blue")
+               cls = "m-blue",
+               tip = "Unadjusted risk ratio from the crude (unstratified) data.")
       )
     })
 
