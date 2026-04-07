@@ -159,15 +159,6 @@ pvalueFunctionsServer <- function(id) {
       list(c1 = c1, c2 = c2, df = df)
     })
 
-    # ── Metric card helper ─────────────────────────────────────────────────────
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Results summary cards ──────────────────────────────────────────────────
     output$results <- renderUI({
       r  <- computed()
@@ -175,31 +166,35 @@ pvalueFunctionsServer <- function(id) {
       c2 <- r$c2
 
       tags$div(class = "metrics",
-        metric(
+        metric_card(
           "Curve 1 — Point Estimate",
           fmt4(c1$est),
           paste0("SE(ln RR) = ", fmt4(c1$SE),
                  " \u2502 95% CI: ", fmt4(c1$ll95), "\u2013", fmt4(c1$ul95)),
-          "m-primary wide"
+          "m-primary wide",
+          tip = "Point estimate recovered from the 95% CI midpoint on the log scale: exp((ln(UL) + ln(LL)) / 2)."
         ),
-        metric(
+        metric_card(
           "Curve 2 — Point Estimate",
           fmt4(c2$est),
           paste0("SE(ln RR) = ", fmt4(c2$SE),
                  " \u2502 95% CI: ", fmt4(c2$ll95), "\u2013", fmt4(c2$ul95)),
-          "m-blue"
+          "m-blue",
+          tip = "Point estimate recovered from the 95% CI midpoint on the log scale: exp((ln(UL) + ln(LL)) / 2)."
         ),
-        metric(
+        metric_card(
           "Curve 1 — P at RR = 1",
           fmt4(2 * (1 - pnorm(abs(c1$ln_est) / c1$SE))),
           "two-tailed p for null hypothesis",
-          "m-teal"
+          "m-teal",
+          tip = "Two-sided p-value at the null value RR = 1. Derived from SE(ln RR) = (ln(UL) - ln(LL)) / (2 \u00d7 1.96)."
         ),
-        metric(
+        metric_card(
           "Curve 2 — P at RR = 1",
           fmt4(2 * (1 - pnorm(abs(c2$ln_est) / c2$SE))),
           "two-tailed p for null hypothesis",
-          "m-purple"
+          "m-purple",
+          tip = "Two-sided p-value at the null value RR = 1. Derived from SE(ln RR) = (ln(UL) - ln(LL)) / (2 \u00d7 1.96)."
         )
       )
     })

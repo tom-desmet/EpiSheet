@@ -271,34 +271,39 @@ metaAnalysisServer <- function(id) {
       tagList(
         wt_tbl,
         tags$div(class = "metrics",
-          metric(
+          metric_card(
             paste0("Pooled RR (", model_label, ")"),
             fmt4(r$rr_pool),
             paste0("95% CI: ", fmt4(r$ci95_pool[1]), "\u2013", fmt4(r$ci95_pool[2])),
-            "m-primary wide"
+            "m-primary wide",
+            tip = "Inverse-variance pooled relative risk across studies."
           ),
-          metric(
+          metric_card(
             "99% Confidence Interval",
             paste0(fmt4(r$ci99_pool[1]), "\u2013", fmt4(r$ci99_pool[2])),
-            cls = "m-blue"
+            cls = "m-blue",
+            tip = "99% confidence interval for the pooled estimate."
           ),
-          metric(
+          metric_card(
             "Cochran Q (heterogeneity)",
             paste0("Q = ", fmt2(r$Q)),
             paste0("p = ", fmt4(r$p_Q), "  (df = ", r$k - 1L, ")"),
-            cls = "m-teal"
+            cls = "m-teal",
+            tip = "P-value for Cochran's Q test of heterogeneity. Small p suggests the true effect varies across studies."
           ),
-          metric(
+          metric_card(
             paste0("I\u00b2 (inconsistency)"),
             paste0(fmt2(r$I2), "%"),
             "% variation due to heterogeneity",
-            cls = "m-teal"
+            cls = "m-teal",
+            tip = "Percentage of total variation across studies attributable to heterogeneity rather than sampling error."
           ),
-          metric(
+          metric_card(
             "\u03c4\u00b2 (between-study variance)",
             fmt4(r$tau2),
             "DerSimonian-Laird estimate",
-            cls = "m-purple"
+            cls = "m-purple",
+            tip = "Between-study variance (DerSimonian-Laird estimate). Zero under fixed effects; larger values indicate more heterogeneity."
           )
         )
       )
