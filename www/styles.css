@@ -1,55 +1,445 @@
-/* Yellow input cells */
-.form-control, .selectize-input {
-  background-color: #FFFACD !important;
+/* ── EpiSheet design system (UI_DESIGN.md) ─────────────────────────────────── */
+
+/* Global reset / base */
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f4f7f9;
+  color: #1a1a1a;
+  margin: 0;
 }
 
-/* Orange result cells */
-.result-orange {
-  background-color: #FFB347;
-  color: #000;
-  font-weight: bold;
-  padding: 4px 8px;
+/* App container */
+.epi-app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+/* ── Top navigation bar ─────────────────────────────────────────────────────── */
+.epi-nav {
+  background: #165c7d;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+.epi-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.epi-nav-ref {
+  margin-left: auto;
+  font-size: 10px;
+  color: rgba(255,255,255,0.6);
+}
+.epi-nav-glossary {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 12px;
+}
+.epi-nav-glossary:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Landing page ───────────────────────────────────────────────────────────── */
+.landing-header {
+  padding: 24px 0 16px;
+}
+.landing-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #005f6a;
+  margin: 0 0 4px;
+}
+.landing-sub {
+  font-size: 12px;
+  color: #6a7f8a;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.group-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6a7f8a;
+  margin: 20px 0 8px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.lcard {
+  background: #fff;
+  border: 0.5px solid #d0dde3;
+  border-radius: 12px;
+  padding: 12px 13px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.lcard:hover { border-color: #a0b8c8; }
+
+.lcard-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.ic-teal   { background: #cce9ec; }
+.ic-blue   { background: #d0e6f5; }
+.ic-purple { background: #e8e4f8; }
+.ic-gray   { background: #f0f0ec; }
+
+.lcard-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; color: #1a1a1a; }
+.lcard-desc { font-size: 10px; color: #6a7f8a; line-height: 1.4; }
+
+/* ── Calculator page ────────────────────────────────────────────────────────── */
+.calc-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #6a7f8a;
+  cursor: pointer;
+  padding: 16px 0 8px;
+  background: none;
+  border: none;
+  text-decoration: none;
+}
+.calc-back:hover { color: #165c7d; }
+
+.calc-header {
+  padding: 4px 0 16px;
+}
+.calc-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #005f6a;
+  margin: 0 0 4px;
+}
+.calc-subtitle {
+  font-size: 12px;
+  color: #6a7f8a;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.calc-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Panel (input + results) ─────────────────────────────────────────────────── */
+.panel {
+  border: 0.5px solid #d0dde3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.panel-head {
+  padding: 9px 14px;
+  border-bottom: 0.5px solid #d0dde3;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ph-teal  { background: #e8f5f7; color: #005f6a; }
+.ph-blue  { background: #edf2f8; color: #165c7d; }
+.panel-body { padding: 14px; }
+
+/* ── 2×2 table ───────────────────────────────────────────────────────────────── */
+.tbl {
+  border-collapse: separate;
+  border-spacing: 3px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.tbl th {
+  font-size: 11px;
+  font-weight: 500;
+  color: #4a6070;
+  padding: 6px 10px;
+  text-align: center;
+  background: #eef3f5;
+  border: 1px solid #d0dde3;
+  border-radius: 6px;
+}
+.tbl th.rh { text-align: left; }
+.tbl td {
+  border: 1px solid #d0dde3;
+  border-radius: 6px;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+.tbl td.cl {
+  font-size: 11px;
+  color: #4a6070;
+  background: #eef3f5;
+  padding: 6px 10px;
+  text-align: left;
+}
+.tbl td.tot {
+  background: #eef3f5;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a6070;
+  padding: 6px 8px;
+  border: 1px solid #d0dde3;
+  border-radius: 6px;
+}
+.cell-wrap {
+  position: relative;
+  padding: 4px 4px 4px 4px;
+}
+.cell-letter {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 9px;
+  color: #005f6a;
+  opacity: 0.5;
+  font-weight: 500;
+  pointer-events: none;
+}
+.tbl input[type=number] {
+  width: 58px;
+  font-size: 13px;
+  border: none;
+  background: #fff;
+  color: #1a1a1a;
+  text-align: center;
+  outline: none;
+  padding: 4px 6px;
+  -moz-appearance: textfield;
+}
+.tbl input[type=number]::-webkit-inner-spin-button,
+.tbl input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+.tbl input[type=number]:focus {
+  background: #eef3f5;
   border-radius: 3px;
-  display: inline-block;
-  min-width: 80px;
-  text-align: right;
 }
 
-/* Red result text */
-.result-red {
-  color: #CC0000;
-  font-weight: bold;
-}
-
-/* Crude data box */
-.crude-box {
-  border: 2px solid #CC0000;
+/* ── Calculate button ────────────────────────────────────────────────────────── */
+.calc-btn {
+  width: 100%;
   padding: 10px;
-  margin-top: 10px;
+  background: #fff;
+  color: #165c7d;
+  border: 1.5px solid #165c7d;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}
+.calc-btn:hover { background: #edf2f8; }
+
+/* ── Metric cards ────────────────────────────────────────────────────────────── */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.metric {
+  padding: 11px 13px;
+  border-radius: 8px;
+}
+.metric.wide { grid-column: span 2; }
+
+.m-primary { background: #005f6a; }
+.m-blue    { background: #e8f0f7; }
+.m-teal    { background: #e6f4f5; }
+.m-purple  { background: #f0ecfb; }
+
+.metric-label {
+  font-size: 10px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.metric-value {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.metric-sub {
+  font-size: 10px;
+  margin-top: 2px;
 }
 
-/* Result label */
-.result-label {
-  font-weight: bold;
-  margin-right: 6px;
+/* Text colours per card type */
+.m-primary .metric-label { color: rgba(255,255,255,0.7); }
+.m-primary .metric-value { color: #fff; }
+.m-primary .metric-sub   { color: rgba(255,255,255,0.55); }
+
+.m-blue .metric-label { color: #165c7d; }
+.m-blue .metric-value { color: #165c7d; }
+.m-blue .metric-sub   { color: #7a9bbf; }
+
+.m-teal .metric-label { color: #005f6a; }
+.m-teal .metric-value { color: #005f6a; }
+.m-teal .metric-sub   { color: #4a9aa5; }
+
+.m-purple .metric-label { color: #6b3fa0; }
+.m-purple .metric-value { color: #6b3fa0; }
+.m-purple .metric-sub   { color: #9b6fc8; }
+
+/* ── Info marker (ⓘ) ─────────────────────────────────────────────────────────── */
+.info-mark {
+  font-size: 9px;
+  cursor: pointer;
+  opacity: 0.55;
+  background: none;
+  border: none;
+  padding: 0 0 0 2px;
+  line-height: 1;
+}
+.info-mark:hover { opacity: 1; }
+
+/* ── Interpretation block ────────────────────────────────────────────────────── */
+.conclusion {
+  margin-top: 16px;
+  background: #f5f9f0;
+  border: 0.5px solid #b8d9a0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.conc-head {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #3b6d11;
+  margin-bottom: 8px;
+}
+.conc-text {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  color: #2a3a1a;
 }
 
-/* Compact numeric inputs */
-.compact-input .form-control {
-  width: 100px;
+/* ── Glossary panel ──────────────────────────────────────────────────────────── */
+.glossary-overlay {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 300px;
+  background: #fff;
+  border-left: 0.5px solid #d0dde3;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.08);
+  z-index: 9999;
+  overflow-y: auto;
+  padding: 20px 16px;
+}
+.glossary-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #005f6a;
+  margin-bottom: 16px;
+}
+.glossary-term {
+  font-size: 12px;
+  font-weight: 500;
+  color: #005f6a;
+  margin: 12px 0 2px;
+}
+.glossary-def {
+  font-size: 11px;
+  color: #6a7f8a;
+  line-height: 1.6;
+  margin: 0;
+}
+.glossary-close {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6a7f8a;
 }
 
-/* Table styling */
-.epi-table th {
-  background-color: #f0f0f0;
-  font-weight: bold;
+/* ── Strata inputs ───────────────────────────────────────────────────────────── */
+.strata-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4a6070;
+  margin: 10px 0 4px;
+}
+.strata-grid {
+  display: grid;
+  gap: 4px;
 }
 
-/* Stratum header */
-.stratum-header {
-  background-color: #e8e8e8;
-  font-weight: bold;
-  padding: 4px 8px;
-  margin-top: 8px;
-  border-left: 3px solid #666;
+/* ── Compact numeric inputs ──────────────────────────────────────────────────── */
+.epi-input label {
+  font-size: 11px;
+  color: #4a6070;
+  margin-bottom: 3px;
+  display: block;
 }
+.epi-input input[type=number],
+.epi-input input[type=text],
+.epi-input select {
+  width: 100%;
+  border: 0.5px solid #d0dde3;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  background: #fff;
+  color: #1a1a1a;
+  outline: none;
+}
+.epi-input input:focus,
+.epi-input select:focus { border-color: #165c7d; }
+
+/* Override Shiny defaults */
+.form-group { margin-bottom: 10px; }
+.form-group label { font-size: 11px; color: #4a6070; }
+.form-control {
+  border: 0.5px solid #d0dde3 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  padding: 6px 8px !important;
+  background: #fff !important;
+}
+.form-control:focus { border-color: #165c7d !important; box-shadow: none !important; }
+
+/* ── Breadcrumb ──────────────────────────────────────────────────────────────── */
+.breadcrumb-bar {
+  font-size: 11px;
+  color: #6a7f8a;
+  padding: 12px 0 0;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────────── */
+.muted { color: #6a7f8a; }
+.mt8 { margin-top: 8px; }
+.mt16 { margin-top: 16px; }
