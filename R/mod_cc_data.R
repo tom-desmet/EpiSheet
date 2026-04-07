@@ -5,28 +5,29 @@ ccDataUI <- function(id) {
   ns <- NS(id)
 
   # Helper: one stratum 2×2 block
-  # Columns: Cases Exposed (a), Cases Unexposed (b), Controls Exposed (c), Controls Unexposed (d)
+  # Columns: Cases / Controls; Rows: Exposed / Unexposed
   stratum_inputs <- function(i) {
     lbl <- paste0("Stratum ", i)
     pfx <- paste0("s", i, "_")
-    tags$div(class = "stratum-block",
-      tags$div(class = "stratum-title", lbl),
-      tags$div(class = "stratum-grid",
-        tags$div(
-          tags$label("Cases exposed (a)"),
-          numericInput(ns(paste0(pfx, "a")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Cases unexposed (b)"),
-          numericInput(ns(paste0(pfx, "b")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Controls exposed (c)"),
-          numericInput(ns(paste0(pfx, "c")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Controls unexposed (d)"),
-          numericInput(ns(paste0(pfx, "d")), NULL, value = NULL, min = 0, step = 1)
+    tags$div(style = "margin-bottom: 12px;",
+      tags$div(class = "strata-label", lbl),
+      tags$table(class = "tbl",
+        tags$thead(tags$tr(
+          tags$th(class = "rh", ""),
+          tags$th("Cases"),
+          tags$th("Controls")
+        )),
+        tags$tbody(
+          tags$tr(
+            tags$td(class = "cl", "Exposed"),
+            tags$td(numericInput(ns(paste0(pfx, "a")), tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "b")), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px"))
+          ),
+          tags$tr(
+            tags$td(class = "cl", "Unexposed"),
+            tags$td(numericInput(ns(paste0(pfx, "c")), tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "d")), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px"))
+          )
         )
       )
     )
@@ -45,23 +46,26 @@ ccDataUI <- function(id) {
           stratum_inputs(3),
 
           tags$hr(),
-          tags$div(class = "stratum-title", "Crude Data"),
-          tags$div(class = "stratum-grid",
-            tags$div(
-              tags$label("Cases exposed (a)"),
-              numericInput(ns("cr_a"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Cases unexposed (b)"),
-              numericInput(ns("cr_b"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Controls exposed (c)"),
-              numericInput(ns("cr_c"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Controls unexposed (d)"),
-              numericInput(ns("cr_d"), NULL, value = NULL, min = 0, step = 1)
+          tags$div(style = "margin-bottom: 12px;",
+            tags$div(class = "strata-label", "Crude Data"),
+            tags$table(class = "tbl",
+              tags$thead(tags$tr(
+                tags$th(class = "rh", ""),
+                tags$th("Cases"),
+                tags$th("Controls")
+              )),
+              tags$tbody(
+                tags$tr(
+                  tags$td(class = "cl", "Exposed"),
+                  tags$td(numericInput(ns("cr_a"), tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_b"), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px"))
+                ),
+                tags$tr(
+                  tags$td(class = "cl", "Unexposed"),
+                  tags$td(numericInput(ns("cr_c"), tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_d"), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px"))
+                )
+              )
             )
           ),
 
@@ -106,8 +110,7 @@ ccDataServer <- function(id) {
         b <- input[[paste0(pfx, "b")]]
         c <- input[[paste0(pfx, "c")]]
         d <- input[[paste0(pfx, "d")]]
-        if (!is.null(a) && !is.null(b) && !is.null(c) && !is.null(d) &&
-            !is.na(a) && !is.na(b) && !is.na(c) && !is.na(d) &&
+        if (!is.na(a) && !is.na(b) && !is.na(c) && !is.na(d) &&
             a >= 0 && b >= 0 && c >= 0 && d >= 0 &&
             (a + b) > 0 && (c + d) > 0) {
           strata[[length(strata) + 1]] <- list(a = a, b = b, c = c, d = d)
@@ -191,8 +194,7 @@ ccDataServer <- function(id) {
       crude_ci95 <- c(NA_real_, NA_real_)
       cr_a <- input$cr_a; cr_b <- input$cr_b
       cr_c <- input$cr_c; cr_d <- input$cr_d
-      if (!is.null(cr_a) && !is.null(cr_b) && !is.null(cr_c) && !is.null(cr_d) &&
-          !is.na(cr_a) && !is.na(cr_b) && !is.na(cr_c) && !is.na(cr_d) &&
+      if (!is.na(cr_a) && !is.na(cr_b) && !is.na(cr_c) && !is.na(cr_d) &&
           cr_a > 0 && cr_b > 0 && cr_c > 0 && cr_d > 0) {
         crude_OR   <- (cr_a * cr_d) / (cr_b * cr_c)
         se_cr      <- sqrt(1/cr_a + 1/cr_b + 1/cr_c + 1/cr_d)

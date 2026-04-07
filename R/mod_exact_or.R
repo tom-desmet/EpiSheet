@@ -25,30 +25,14 @@ exactOrUI <- function(id) {
             tags$tbody(
               tags$tr(
                 tags$td(class = "cl", "Exposed"),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "a"),
-                  tags$input(id = ns("ce"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "b"),
-                  tags$input(id = ns("nce"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
+                tags$td(numericInput(ns("ce"),  tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+                tags$td(numericInput(ns("nce"), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px")),
                 tags$td(class = "tot", textOutput(ns("n1_tot"), inline = TRUE))
               ),
               tags$tr(
                 tags$td(class = "cl", "Unexposed"),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "c"),
-                  tags$input(id = ns("cu"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "d"),
-                  tags$input(id = ns("ncu"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
+                tags$td(numericInput(ns("cu"),  tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+                tags$td(numericInput(ns("ncu"), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px")),
                 tags$td(class = "tot", textOutput(ns("n2_tot"), inline = TRUE))
               ),
               tags$tr(
@@ -59,15 +43,6 @@ exactOrUI <- function(id) {
               )
             )
           ),
-
-          tags$script(HTML(sprintf("
-            ['%s','%s','%s','%s'].forEach(function(id) {
-              document.getElementById(id).addEventListener('input', function() {
-                Shiny.setInputValue(id, this.value === '' ? null : +this.value,
-                  {priority: 'event'});
-              });
-            });
-          ", ns("ce"), ns("nce"), ns("cu"), ns("ncu")))),
 
           tags$button(class = "calc-btn",
             onclick = sprintf("Shiny.setInputValue('%s', Math.random())",
@@ -100,29 +75,29 @@ exactOrServer <- function(id) {
     # Marginal totals for table display
     output$n1_tot <- renderText({
       v <- vals()
-      if (!is.null(v$ce) && !is.null(v$nce)) v$ce + v$nce else "\u2014"
+      if (!is.na(v$ce) && !is.na(v$nce)) v$ce + v$nce else "\u2014"
     })
     output$n2_tot <- renderText({
       v <- vals()
-      if (!is.null(v$cu) && !is.null(v$ncu)) v$cu + v$ncu else "\u2014"
+      if (!is.na(v$cu) && !is.na(v$ncu)) v$cu + v$ncu else "\u2014"
     })
     output$m1_tot <- renderText({
       v <- vals()
-      if (!is.null(v$ce) && !is.null(v$cu)) v$ce + v$cu else "\u2014"
+      if (!is.na(v$ce) && !is.na(v$cu)) v$ce + v$cu else "\u2014"
     })
     output$m0_tot <- renderText({
       v <- vals()
-      if (!is.null(v$nce) && !is.null(v$ncu)) v$nce + v$ncu else "\u2014"
+      if (!is.na(v$nce) && !is.na(v$ncu)) v$nce + v$ncu else "\u2014"
     })
     output$N_tot <- renderText({
       v <- vals()
-      if (!any(sapply(v, is.null))) Reduce("+", v) else "\u2014"
+      if (!any(sapply(v, is.na))) Reduce("+", v) else "\u2014"
     })
 
     computed <- eventReactive(input$calc, {
       v <- vals()
       validate(
-        need(!any(sapply(v, is.null)), "Enter all four cell counts."),
+        need(!any(sapply(v, is.na)), "Enter all four cell counts."),
         need(all(sapply(v, function(x) x >= 0)), "All counts must be \u2265 0.")
       )
 
