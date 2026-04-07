@@ -109,18 +109,22 @@ seasonalServer <- function(id) {
       )
     }
 
-    # ── Helper: convert fractional month to approximate calendar date ──────────
-    # peak_month_frac is 1-based (1 = Jan, 12 = Dec)
-    frac_month_to_label <- function(frac) {
-      # Clamp to [1, 13)
-      frac <- ((frac - 1) %% 12) + 1
-      month_idx  <- floor(frac)
-      month_idx  <- max(1L, min(12L, as.integer(month_idx)))
-      # day within month (approximate: 28-31 days, use 30 for simplicity)
-      day_frac   <- frac - floor(frac)
-      day_approx <- round(day_frac * 30) + 1
-      day_approx <- max(1L, min(30L, as.integer(day_approx)))
-      sprintf("%s %d", month_names[month_idx], day_approx)
+    # ── Helper: convert phi (radians) to an approximate calendar date label ─────
+    # Episheet reports the peak as day-of-year where degree = doy/365 * 360.
+    # Conversion: doy = phi_rad * 365 / (2*pi)
+    # A non-leap reference year (365 days) is used throughout.
+    phi_to_date_label <- function(phi_rad) {
+      doy <- phi_rad * 365 / (2 * pi)
+      # Wrap to [1, 365]
+      doy <- doy %% 365
+      if (doy <= 0) doy <- doy + 365
+      doy_int <- max(1L, min(365L, as.integer(round(doy))))
+      # Convert to month/day using a fixed non-leap year
+      origin <- as.Date("2023-01-01")
+      d <- origin + (doy_int - 1L)
+      mo  <- as.integer(format(d, "%m"))
+      day <- as.integer(format(d, "%d"))
+      sprintf("%s %d", month_names[mo], day)
     }
 
     # ── Core computation ────────────────────────────────────────────────────────
@@ -184,14 +188,9 @@ seasonalServer <- function(id) {
       phi_deg <- phi_rad * 180 / pi
       if (phi_deg < 0) phi_deg <- phi_deg + 360
 
-      # Convert angle to fractional month
-      # phi = 0 corresponds to mid-January (month 0.5 on a 0-based scale)
-      # peak_month_frac (1-based) = 0.5 + phi * 12 / (2*pi)
-      peak_month_frac <- 0.5 + phi_rad * 12 / (2 * pi)
-      if (peak_month_frac < 1)  peak_month_frac <- peak_month_frac + 12
-      if (peak_month_frac > 13) peak_month_frac <- peak_month_frac - 12
-
-      peak_label <- frac_month_to_label(peak_month_frac)
+      # Convert angle to calendar date label using day-of-year method
+      # (matches Episheet convention: degree = doy/365 * 360)
+      peak_label <- phi_to_date_label(phi_rad)
 
       # Rayleigh test statistic Z = N * r^2
       z_rayleigh <- N_total * r_val^2
