@@ -213,6 +213,10 @@ body {
   margin-bottom: 0;
   line-height: 1.2;
 }
+.tbl td .form-group {
+  margin: 0 auto;        /* centre the container block within the cell */
+  padding: 4px 4px 4px;
+}
 .tbl .form-control {
   text-align: center !important;
   padding: 4px 4px !important;
