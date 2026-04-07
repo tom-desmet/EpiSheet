@@ -1,7 +1,6 @@
 # CLAUDE.md — Episheet Shiny Rebuild
 
 ## Project overview
-
 Rebuild Kenneth Rothman's **Episheet** (epidemiologic spreadsheet tool) as a
 Shiny app in R. Episheet is a protected XLS workbook with 13 analytical tabs
 covering core epidemiologic methods (stratified analysis, meta-analysis, power,
@@ -160,7 +159,7 @@ Use **Shiny modules** for every tab. Top-level UI is `navbarPage()`.
 
 ### 5. Cohort Power
 - **Inputs (yellow):** Z-alpha (default 1.645), Unexposed Exposure Rate,
-  Risk in Unexposed, Max No. Exposed; RR Effect Levels (4 columns: e.g. 1.5, 2, 3, 5, 7, 10)
+  Risk in Unexposed, Max No. Exposed; RR Effect Levels (6 levels: 1.5, 2, 3, 5, 7, 10)
 - **Outputs:** Power table (N Exposed × RR → power); embedded line chart
   (x = N Exposed linear, y = Power 0–1, one line per RR level)
 - **Method:** Kelsey/Fleiss two-proportion formula (port VBA `Powercalc` from Module4):
@@ -179,7 +178,7 @@ Use **Shiny modules** for every tab. Top-level UI is `navbarPage()`.
 
 ### 6. Case-control Power
 - **Inputs:** Z-alpha (1.645), Control/Case Ratio, Exposure Prevalence (p0),
-  Maximum No. Cases; OR Effect Levels (same 4-column structure)
+  Maximum No. Cases; OR Effect Levels (same 6-level structure: 1.5, 2, 3, 5, 7, 10)
 - **Outputs:** Power table (N Cases × OR → power); line chart same format
 - **Method:** Schlesselman formula (port VBA `ccPowercalc` from Module3):
   ```r
@@ -255,6 +254,8 @@ Use **Shiny modules** for every tab. Top-level UI is `navbarPage()`.
   exact binomial CI (port Module5)
 - **R:** `stats::mcnemar.test()`, `epitools::oddsratio()`
 - **Reference:** Modern Epidemiology 3rd ed.
+- **Test values:** Matching ratio 1 inputs: Case Exposed=41/23/16, Case Unexposed=31/8/0 →
+  RRmh=2.0615; 95% CI: 1.2465–3.4096; P=0.0052; Crude RR=2.0020, 95% CI: 1.2558–3.1915
 
 ### 12. O.R. Exact
 - **Inputs:** Single 2×2 table: Disease/Non-Disease × Exposed/Nonexposed (4 cells)
@@ -291,8 +292,10 @@ Use **Shiny modules** for every tab. Top-level UI is `navbarPage()`.
   LL (lower CI), UL (upper CI), ln(RR) (optional), V(ln(RR)) (optional)
 - **Outputs:** Per-study Relative Weight (%); Pooled row: pooled RR, LL, UL,
   ln(RR), V(ln(RR)); P for homogeneity (Cochran Q); forest plot
-- **Forest plot:** Log y-axis (0.10–10.00); horizontal error bars per study;
-  pooled estimate as distinct point labelled "Pooled"; study labels on x-axis
+- **Forest plot:** Use standard orientation (studies on y-axis, RR on x-axis, log scale 0.10–10.00);
+  horizontal CI lines per study with point estimate; pooled estimate as distinct labelled point.
+  Note: original Excel uses a rotated plot (studies on x-axis) — do NOT replicate this; use
+  standard forest plot orientation as produced by `metafor::forest()`
 - **Model toggle:** Fixed effects = inverse-variance; Random effects = DerSimonian-Laird
 - **Method:** Port all functions from VBA `Modul1`:
   - `SUM_W` → Σ(1/v_i)
@@ -337,11 +340,25 @@ Full VBA source recovered; use `metafor::rma()` as validation baseline.
 
 ---
 
+### 15. 2×2 Table (new — not in original Episheet)
+- **Inputs:** Single 2×2 table: Exposed/Unexposed × Cases/Non-cases (4 cells)
+- **Outputs:** OR, RR, Risk Difference; 95% and 99% CI for each; Chi-square (with and without
+  continuity correction); Fisher exact p-value (mid-p and Fisher); Attributable Risk (exposed
+  and population); Number Needed to Treat/Harm
+- **Method:** Standard 2×2 formulas; exact CI via `exact2x2`; Taylor-series CI for RR and RD
+- **R:** `epitools::oddsratio()`, `epitools::riskratio()`, `exact2x2::fisher.exact()`
+- **Rationale:** 2×2 tables are the foundation of epidemiologic analysis and are conspicuously
+  absent from the original Episheet. OpenEpi includes this as a core module.
+- **Reference:** OpenEpi (www.openepi.com); Rothman KJ Modern Epidemiology 3rd ed.
+
+---
+
 ## Build order (recommended)
 
 Start simple, prove the reactive pattern, then add complexity:
 
-1. **Quickcalc** — single-number, self-contained, tests the exact CI ports
+1. **2×2 Table** — simplest stratified analysis, proves reactive pattern with standard formulas
+2. **Quickcalc** — single-number, self-contained, tests the exact CI ports
 2. **Rate Data** — use existing `episheet` package, wrap in module
 3. **Risk Data** — same
 4. **Case-control Data** — introduces stratified MH logic
@@ -390,6 +407,7 @@ Place in the navbar, not inside individual tabs.
 7. Cornfield J. A statistical problem arising from retrospective studies. 1956.
 8. Rothman KJ. Estimation of confidence limits for the cumulative probability of survival. J Chron Dis 1978;31:557-560.
 9. Brookhart MA, Rothman KJ. Simple estimators of the intensity of seasonal occurrence. BMC Med Res Methodol 2008;8:67.
+10. Dean AG et al. OpenEpi: Open Source Epidemiologic Statistics for Public Health. www.openepi.com (reference implementation for 2×2 table module).
 
 ---
 
@@ -425,4 +443,3 @@ install.packages("renv")
 renv::init()
 # after installing all packages:
 renv::snapshot()
-```
