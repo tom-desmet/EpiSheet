@@ -94,16 +94,6 @@ lifeTableServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Helper: single metric card
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(
-        class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Core computation ───────────────────────────────────────────────────────
     computed <- eventReactive(input$calc, {
 
@@ -236,23 +226,26 @@ lifeTableServer <- function(id) {
     output$results <- renderUI({
       r <- computed()
       tags$div(class = "metrics",
-        metric(
+        metric_card(
           label = "Median Survival Period",
           value = r$median_surv,
           sub   = "S(t) first \u2264 0.5",
-          cls   = "m-primary wide"
+          cls   = "m-primary wide",
+          tip   = "The first time period where the cumulative survival probability S(t) falls to or below 0.50."
         ),
-        metric(
+        metric_card(
           label = "Survival at Last Period",
           value = fmt4(r$final_surv),
           sub   = paste0("Period: ", r$lbl_vec[r$n_periods]),
-          cls   = "m-blue"
+          cls   = "m-blue",
+          tip   = "Cumulative probability of surviving to the end of the last observed period. S(t) = product of all period survival probabilities p_x."
         ),
-        metric(
+        metric_card(
           label = "Total Events",
           value = as.character(r$n_events),
           sub   = paste0("over ", r$n_periods, " periods"),
-          cls   = "m-teal"
+          cls   = "m-teal",
+          tip   = "Total number of events (deaths or failures) across all periods."
         )
       )
     })

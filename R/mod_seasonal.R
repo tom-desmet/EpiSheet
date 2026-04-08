@@ -99,16 +99,6 @@ seasonalServer <- function(id) {
     month_names <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
-    # Helper: single metric card
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(
-        class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Helper: convert phi (radians) to an approximate calendar date label ─────
     # Episheet reports the peak as day-of-year where degree = doy/365 * 360.
     # Conversion: doy = phi_rad * 365 / (2*pi)
@@ -264,29 +254,33 @@ seasonalServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric(
+        metric_card(
           label = "Peak / Low Ratio",
           value = fmt2(r$peak_low_ratio),
           sub   = pl_sub,
-          cls   = "m-primary wide"
+          cls   = "m-primary wide",
+          tip   = "Ratio of the fitted peak to the fitted trough of the sinusoidal curve. A ratio of 1 indicates no seasonality."
         ),
-        metric(
+        metric_card(
           label = "Time of Peak",
           value = r$peak_label,
           sub   = paste0(round(r$phi_deg, 1), "\u00b0"),
-          cls   = "m-blue"
+          cls   = "m-blue",
+          tip   = "Estimated calendar date of the annual peak, derived from the phase angle \u03c6 of the fitted sinusoid."
         ),
-        metric(
+        metric_card(
           label = "Rayleigh p-value",
           value = p_fmt,
           sub   = paste0("Z = ", fmt2(r$z_rayleigh)),
-          cls   = "m-teal"
+          cls   = "m-teal",
+          tip   = "Walter-Elwood test for periodicity. Tests whether the monthly distribution departs significantly from uniformity. Based on the Rayleigh statistic Z = N\u00b7r\u00b2, chi-squared with 2 df."
         ),
-        metric(
+        metric_card(
           label = "Mean vector length (r)",
           value = fmt4(r$r_val),
           sub   = "0 = uniform; 1 = all one month",
-          cls   = "m-purple"
+          cls   = "m-purple",
+          tip   = "The mean resultant length of the unit vectors pointing in the direction of each month's cases. Measures the concentration of cases around the peak month."
         )
       )
     })
