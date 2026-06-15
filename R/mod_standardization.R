@@ -109,15 +109,6 @@ standardizationServer <- function(id) {
     # ── NULL-coalescing helper ─────────────────────────────────────────────────
     `%||%` <- function(a, b) if (!is.null(a)) a else b
 
-    # ── Metric card helper ─────────────────────────────────────────────────────
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Dynamic per-group numerator/denominator inputs for each stratum row ───
     lapply(seq_len(10), function(i) {
       output[[paste0("group_inputs_", i)]] <- renderUI({
@@ -250,20 +241,22 @@ standardizationServer <- function(id) {
           val_txt <- fmt4(gr$dsr)
         }
 
-        metric(
+        metric_card(
           label = paste0("Group ", g, " — Adjusted ", type_label),
           value = val_txt,
           sub   = sub_txt,
-          cls   = cls
+          cls   = cls,
+          tip   = "Directly standardized rate or proportion for this group. Weights are the supplied stratum weights."
         )
       })
 
       smr_card <- if (!is.na(r$smr)) {
-        metric(
+        metric_card(
           label = "SMR (Group 1 / Reference)",
           value = fmt4(r$smr),
           sub   = "Indirect standardization",
-          cls   = "m-teal"
+          cls   = "m-teal",
+          tip   = "Standardized Mortality (or Morbidity) Ratio: observed events in Group 1 divided by events expected using the reference group rates."
         )
       }
 

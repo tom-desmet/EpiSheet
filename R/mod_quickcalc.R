@@ -65,14 +65,6 @@ quickcalcServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     computed <- eventReactive(input$calc, {
       tab <- input$calc_type
 
@@ -215,59 +207,77 @@ quickcalcServer <- function(id) {
 
       if (r$type == "proportion") {
         tags$div(class = "metrics",
-          metric("Point Estimate",
+          metric_card("Point Estimate",
                  fmt4(r$pt_est),
                  paste0(r$x, " / ", r$N),
-                 "m-primary wide"),
-          metric(paste0("Exact Mid-P CI (", r$conf, "%)"),
+                 "m-primary wide",
+                 tip = "Observed proportion (numerator / denominator)."),
+          metric_card(paste0("Exact Mid-P CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_midp), " \u2013 ", fmt4(r$hi_midp)),
-                 cls = "m-blue"),
-          metric(paste0("Exact Fisher CI (", r$conf, "%)"),
+                 cls = "m-blue",
+                 tip = "Exact confidence interval using the mid-P method (less conservative than Fisher exact)."),
+          metric_card(paste0("Exact Fisher CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_fish), " \u2013 ", fmt4(r$hi_fish)),
-                 cls = "m-blue"),
-          metric(paste0("Wilson Approx CI (", r$conf, "%)"),
+                 cls = "m-blue",
+                 tip = "Exact confidence interval using Fisher's method (Clopper-Pearson)."),
+          metric_card(paste0("Wilson Approx CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_wils), " \u2013 ", fmt4(r$hi_wils)),
-                 cls = "m-teal"),
-          metric("2-tail P (Mid-P, H\u2080: p = 0.5)", fmt4(r$p_midp), cls = "m-purple"),
-          metric("2-tail P (Fisher, H\u2080: p = 0.5)", fmt4(r$p_fish), cls = "m-purple")
+                 cls = "m-teal",
+                 tip = "Wilson score approximate confidence interval for the proportion."),
+          metric_card("2-tail P (Mid-P, H\u2080: p = 0.5)", fmt4(r$p_midp), cls = "m-purple",
+                 tip = "Two-sided mid-P exact p-value testing the null hypothesis that the true proportion is 0.5."),
+          metric_card("2-tail P (Fisher, H\u2080: p = 0.5)", fmt4(r$p_fish), cls = "m-purple",
+                 tip = "Two-sided Fisher exact p-value testing the null hypothesis that the true proportion is 0.5.")
         )
 
       } else if (r$type == "rate") {
         tags$div(class = "metrics",
-          metric("Rate (per unit time)",
+          metric_card("Rate (per unit time)",
                  fmt4(r$pt_est),
                  paste0(r$x, " events / ", r$N, " person-time"),
-                 "m-primary wide"),
-          metric(paste0("Exact Mid-P CI (", r$conf, "%)"),
+                 "m-primary wide",
+                 tip = "Observed rate (events / person-time or events / expected)."),
+          metric_card(paste0("Exact Mid-P CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_midp), " \u2013 ", fmt4(r$hi_midp)),
-                 cls = "m-blue"),
-          metric(paste0("Exact Garwood CI (", r$conf, "%)"),
+                 cls = "m-blue",
+                 tip = "Exact Poisson confidence interval using the mid-P method."),
+          metric_card(paste0("Exact Garwood CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_fish), " \u2013 ", fmt4(r$hi_fish)),
-                 cls = "m-blue"),
-          metric(paste0("Byar Approx CI (", r$conf, "%)"),
+                 cls = "m-blue",
+                 tip = "Exact Poisson (Garwood) confidence interval using Fisher's method."),
+          metric_card(paste0("Byar Approx CI (", r$conf, "%)"),
                  paste0(fmt4(r$lo_byar), " \u2013 ", fmt4(r$hi_byar)),
-                 cls = "m-teal"),
-          metric("2-tail P (Mid-P)", fmt4(r$p_midp), cls = "m-purple"),
-          metric("2-tail P (Fisher/Exact)", fmt4(r$p_fish), cls = "m-purple")
+                 cls = "m-teal",
+                 tip = "Byar approximate confidence interval for a Poisson rate."),
+          metric_card("2-tail P (Mid-P)", fmt4(r$p_midp), cls = "m-purple",
+                 tip = "Two-sided mid-P exact p-value for the observed Poisson count."),
+          metric_card("2-tail P (Fisher/Exact)", fmt4(r$p_fish), cls = "m-purple",
+                 tip = "Two-sided Fisher exact p-value for the observed Poisson count.")
         )
 
       } else {
         # Statistical test results
         if (r$test_type == "z") {
           tags$div(class = "metrics",
-            metric("Standard Normal (Z)",
-                   fmt4(r$val), "Test statistic", "m-primary wide"),
-            metric("2-sided P-value",  fmt4(r$p_two),   cls = "m-blue"),
-            metric("Upper-tail P",     fmt4(r$p_upper), cls = "m-teal"),
-            metric("Lower-tail P",     fmt4(r$p_lower), cls = "m-purple")
+            metric_card("Standard Normal (Z)",
+                   fmt4(r$val), "Test statistic", "m-primary wide",
+                   tip = "Standard normal (Z) test statistic entered by the user."),
+            metric_card("2-sided P-value",  fmt4(r$p_two),   cls = "m-blue",
+                   tip = "Two-sided p-value: P(|Z| \u2265 |z|) under the standard normal distribution."),
+            metric_card("Upper-tail P",     fmt4(r$p_upper), cls = "m-teal",
+                   tip = "One-sided upper-tail p-value: P(Z \u2265 z)."),
+            metric_card("Lower-tail P",     fmt4(r$p_lower), cls = "m-purple",
+                   tip = "One-sided lower-tail p-value: P(Z \u2264 z).")
           )
         } else {
           tags$div(class = "metrics",
-            metric("Chi-Square",
+            metric_card("Chi-Square",
                    fmt4(r$val),
                    paste0("df = ", r$df),
-                   "m-primary wide"),
-            metric("Upper-tail P-value", fmt4(r$p_upper), cls = "m-blue")
+                   "m-primary wide",
+                   tip = "Chi-square test statistic entered by the user."),
+            metric_card("Upper-tail P-value", fmt4(r$p_upper), cls = "m-blue",
+                   tip = "Upper-tail p-value: P(\u03c7\u00b2 \u2265 value) under the chi-square distribution with the given degrees of freedom.")
           )
         }
       }

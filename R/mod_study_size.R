@@ -199,26 +199,26 @@ studySizeServer <- function(id) {
       r <- computed()
 
       metric_cards <- tags$div(class = "metrics",
-        tags$div(class = "metric m-primary wide",
-          tags$div(class = "metric-label", "N for Pr \u2265 50%"),
-          tags$div(class = "metric-value",
-                   if (!is.na(r$n_50)) formatC(r$n_50, format = "d", big.mark = ",")
-                   else "\u2014"),
-          tags$div(class = "metric-sub",
-                   paste0("Upper CI < ", fmt4(r$bound), " with \u226550% probability"))
+        metric_card(
+          label = "N for Pr \u2265 50%",
+          value = if (!is.na(r$n_50)) formatC(r$n_50, format = "d", big.mark = ",") else "\u2014",
+          sub   = paste0("Upper CI < ", fmt4(r$bound), " with \u226550% probability"),
+          cls   = "m-primary wide",
+          tip   = "Minimum total sample size such that there is at least a 50% probability the upper confidence limit will fall below the desired bound."
         ),
-        tags$div(class = "metric m-blue",
-          tags$div(class = "metric-label", "N for Pr \u2265 80%"),
-          tags$div(class = "metric-value",
-                   if (!is.na(r$n_80)) formatC(r$n_80, format = "d", big.mark = ",")
-                   else "\u2014"),
-          tags$div(class = "metric-sub", "80% probability threshold")
+        metric_card(
+          label = "N for Pr \u2265 80%",
+          value = if (!is.na(r$n_80)) formatC(r$n_80, format = "d", big.mark = ",") else "\u2014",
+          sub   = "80% probability threshold",
+          cls   = "m-blue",
+          tip   = "Minimum total sample size for an 80% probability that the upper confidence limit falls below the desired bound. The conventional planning threshold."
         ),
-        tags$div(class = "metric m-teal",
-          tags$div(class = "metric-label", "Confidence level"),
-          tags$div(class = "metric-value", paste0(r$conf_level, "%")),
-          tags$div(class = "metric-sub",
-                   paste0("z = ", fmt4(r$z)))
+        metric_card(
+          label = "Confidence level",
+          value = paste0(r$conf_level, "%"),
+          sub   = paste0("z = ", fmt4(r$z)),
+          cls   = "m-teal",
+          tip   = "The confidence level used to compute the upper confidence limit. The z-value is the corresponding normal quantile."
         )
       )
 

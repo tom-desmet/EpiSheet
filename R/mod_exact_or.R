@@ -25,30 +25,14 @@ exactOrUI <- function(id) {
             tags$tbody(
               tags$tr(
                 tags$td(class = "cl", "Exposed"),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "a"),
-                  tags$input(id = ns("ce"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "b"),
-                  tags$input(id = ns("nce"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
+                tags$td(numericInput(ns("ce"),  tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+                tags$td(numericInput(ns("nce"), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px")),
                 tags$td(class = "tot", textOutput(ns("n1_tot"), inline = TRUE))
               ),
               tags$tr(
                 tags$td(class = "cl", "Unexposed"),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "c"),
-                  tags$input(id = ns("cu"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
-                tags$td(tags$div(class = "cell-wrap",
-                  tags$span(class = "cell-letter", "d"),
-                  tags$input(id = ns("ncu"), type = "number", min = "0",
-                             placeholder = "0")
-                )),
+                tags$td(numericInput(ns("cu"),  tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+                tags$td(numericInput(ns("ncu"), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px")),
                 tags$td(class = "tot", textOutput(ns("n2_tot"), inline = TRUE))
               ),
               tags$tr(
@@ -59,15 +43,6 @@ exactOrUI <- function(id) {
               )
             )
           ),
-
-          tags$script(HTML(sprintf("
-            ['%s','%s','%s','%s'].forEach(function(id) {
-              document.getElementById(id).addEventListener('input', function() {
-                Shiny.setInputValue(id, this.value === '' ? null : +this.value,
-                  {priority: 'event'});
-              });
-            });
-          ", ns("ce"), ns("nce"), ns("cu"), ns("ncu")))),
 
           tags$button(class = "calc-btn",
             onclick = sprintf("Shiny.setInputValue('%s', Math.random())",
@@ -100,29 +75,29 @@ exactOrServer <- function(id) {
     # Marginal totals for table display
     output$n1_tot <- renderText({
       v <- vals()
-      if (!is.null(v$ce) && !is.null(v$nce)) v$ce + v$nce else "\u2014"
+      if (!is.na(v$ce) && !is.na(v$nce)) v$ce + v$nce else "\u2014"
     })
     output$n2_tot <- renderText({
       v <- vals()
-      if (!is.null(v$cu) && !is.null(v$ncu)) v$cu + v$ncu else "\u2014"
+      if (!is.na(v$cu) && !is.na(v$ncu)) v$cu + v$ncu else "\u2014"
     })
     output$m1_tot <- renderText({
       v <- vals()
-      if (!is.null(v$ce) && !is.null(v$cu)) v$ce + v$cu else "\u2014"
+      if (!is.na(v$ce) && !is.na(v$cu)) v$ce + v$cu else "\u2014"
     })
     output$m0_tot <- renderText({
       v <- vals()
-      if (!is.null(v$nce) && !is.null(v$ncu)) v$nce + v$ncu else "\u2014"
+      if (!is.na(v$nce) && !is.na(v$ncu)) v$nce + v$ncu else "\u2014"
     })
     output$N_tot <- renderText({
       v <- vals()
-      if (!any(sapply(v, is.null))) Reduce("+", v) else "\u2014"
+      if (!any(sapply(v, is.na))) Reduce("+", v) else "\u2014"
     })
 
     computed <- eventReactive(input$calc, {
       v <- vals()
       validate(
-        need(!any(sapply(v, is.null)), "Enter all four cell counts."),
+        need(!any(sapply(v, is.na)), "Enter all four cell counts."),
         need(all(sapply(v, function(x) x >= 0)), "All counts must be \u2265 0.")
       )
 
@@ -183,14 +158,6 @@ exactOrServer <- function(id) {
       )
     })
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     ci_str <- function(lo, hi) {
       paste0(fmt4(lo), " \u2013 ", fmt4(hi))
     }
@@ -198,23 +165,30 @@ exactOrServer <- function(id) {
     output$results <- renderUI({
       r <- computed()
       tags$div(class = "metrics",
-        metric("Odds Ratio", fmt4(r$OR),
-               "Point estimate", "m-primary wide"),
+        metric_card("Odds Ratio", fmt4(r$OR),
+               "Point estimate", "m-primary wide",
+               tip = "Exact odds ratio: (a\u00d7d)/(b\u00d7c). Point estimate from the observed 2\u00d72 table."),
 
-        metric("95% Mid-P CI", ci_str(r$ci95_midp$lower, r$ci95_midp$upper),
-               "Exact mid-p method", "m-blue"),
-        metric("95% Fisher CI", ci_str(r$ci95_fisher$lower, r$ci95_fisher$upper),
-               "Fisher exact method", "m-blue"),
+        metric_card("95% Mid-P CI", ci_str(r$ci95_midp$lower, r$ci95_midp$upper),
+               "Exact mid-p method", "m-blue",
+               tip = "Exact 95% confidence interval using the mid-P method (less conservative than Fisher)."),
+        metric_card("95% Fisher CI", ci_str(r$ci95_fisher$lower, r$ci95_fisher$upper),
+               "Fisher exact method", "m-blue",
+               tip = "Exact 95% confidence interval using Fisher's method (Cornfield 1956)."),
 
-        metric("90% Mid-P CI", ci_str(r$ci90_midp$lower, r$ci90_midp$upper),
-               "Exact mid-p method", "m-teal"),
-        metric("90% Fisher CI", ci_str(r$ci90_fisher$lower, r$ci90_fisher$upper),
-               "Fisher exact method", "m-teal"),
+        metric_card("90% Mid-P CI", ci_str(r$ci90_midp$lower, r$ci90_midp$upper),
+               "Exact mid-p method", "m-teal",
+               tip = "Exact 90% confidence interval using the mid-P method."),
+        metric_card("90% Fisher CI", ci_str(r$ci90_fisher$lower, r$ci90_fisher$upper),
+               "Fisher exact method", "m-teal",
+               tip = "Exact 90% confidence interval using Fisher's method."),
 
-        metric("Mid-P exact p", fmt4(r$p_midp),
-               "Two-sided", "m-purple"),
-        metric("Fisher exact p", fmt4(r$p_fisher),
-               "Two-sided", "m-purple")
+        metric_card("Mid-P exact p", fmt4(r$p_midp),
+               "Two-sided", "m-purple",
+               tip = "Two-sided mid-P exact p-value under the null of OR = 1."),
+        metric_card("Fisher exact p", fmt4(r$p_fisher),
+               "Two-sided", "m-purple",
+               tip = "Two-sided Fisher exact p-value under the null of OR = 1.")
       )
     })
 

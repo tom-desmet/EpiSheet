@@ -140,15 +140,6 @@ matchedCcServer <- function(id) {
       tags$span(get_cell("n11") + get_cell("n10") + get_cell("n01") + get_cell("n00"))
     })
 
-    # ── Metric card helper ─────────────────────────────────────────────────────
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # ── Core computation ───────────────────────────────────────────────────────
     computed <- eventReactive(input$calc, {
       n11 <- input$n11; n10 <- input$n10
@@ -243,43 +234,49 @@ matchedCcServer <- function(id) {
       )
 
       tags$div(class = "metrics",
-        metric(
+        metric_card(
           "McNemar Odds Ratio",
           fmt4(r$OR_mc),
           paste0("n10 = ", r$n10, ", n01 = ", r$n01,
                  " (", r$n10 + r$n01, " discordant pairs)"),
-          "m-primary wide"
+          "m-primary wide",
+          tip = "McNemar odds ratio from discordant pairs: n\u2081\u2080 / n\u2080\u2081. Only discordant pairs contribute information about the exposure-disease association."
         ),
-        metric(
+        metric_card(
           "95% Confidence Interval",
           paste0(fmt4(r$ci95[1]), "\u2013", fmt4(r$ci95[2])),
           paste0("90% CI: ", fmt4(r$ci90[1]), "\u2013", fmt4(r$ci90[2])),
-          "m-blue"
+          "m-blue",
+          tip = "Normal-approximation confidence interval for the McNemar OR, based on SE(ln OR) = sqrt(1/n10 + 1/n01)."
         ),
-        metric(
+        metric_card(
           "99% Confidence Interval",
           paste0(fmt4(r$ci99[1]), "\u2013", fmt4(r$ci99[2])),
           "Normal approximation on ln(OR)",
-          "m-teal"
+          "m-teal",
+          tip = "99% normal-approximation confidence interval for the McNemar OR."
         ),
-        metric(
+        metric_card(
           "McNemar P-value",
           fmt4(r$p_val),
           paste0("\u03c7\u00b2 (corrected) = ", fmt4(r$chi2), " (df = 1)"),
-          "m-purple"
+          "m-purple",
+          tip = "McNemar chi-square p-value (with continuity correction) testing the null hypothesis that the OR = 1."
         ),
-        metric(
+        metric_card(
           "Crude OR (marginal)",
           crude_txt,
           "From reconstructed marginal 2\u00d72",
-          "m-blue"
+          "m-blue",
+          tip = "Unadjusted odds ratio from the marginal 2\u00d72 table reconstructed from the matched-pairs counts, ignoring the matching."
         ),
-        metric(
+        metric_card(
           "Total pairs (N)",
           as.character(r$N),
           paste0("Concordant: ", r$n11 + r$n00,
                  " \u2502 Discordant: ", r$n10 + r$n01),
-          "m-teal"
+          "m-teal",
+          tip = "Total number of matched pairs. Only discordant pairs (n10, n01) contribute to the McNemar estimate."
         )
       )
     })

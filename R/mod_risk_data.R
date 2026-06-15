@@ -7,24 +7,25 @@ riskDataUI <- function(id) {
   stratum_inputs <- function(i) {
     lbl <- paste0("Stratum ", i)
     pfx <- paste0("s", i, "_")
-    tags$div(class = "stratum-block",
-      tags$div(class = "stratum-title", lbl),
-      tags$div(class = "stratum-grid",
-        tags$div(
-          tags$label("Cases (exposed)"),
-          numericInput(ns(paste0(pfx, "a")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Total exposed (N\u2081)"),
-          numericInput(ns(paste0(pfx, "N1")), NULL, value = NULL, min = 1, step = 1)
-        ),
-        tags$div(
-          tags$label("Cases (unexposed)"),
-          numericInput(ns(paste0(pfx, "c")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Total unexposed (N\u2080)"),
-          numericInput(ns(paste0(pfx, "N0")), NULL, value = NULL, min = 1, step = 1)
+    tags$div(style = "margin-bottom: 12px;",
+      tags$div(class = "strata-label", lbl),
+      tags$table(class = "tbl",
+        tags$thead(tags$tr(
+          tags$th(class = "rh", ""),
+          tags$th("Cases"),
+          tags$th("Non-cases")
+        )),
+        tags$tbody(
+          tags$tr(
+            tags$td(class = "cl", "Exposed"),
+            tags$td(numericInput(ns(paste0(pfx, "a")), tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "b")), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px"))
+          ),
+          tags$tr(
+            tags$td(class = "cl", "Unexposed"),
+            tags$td(numericInput(ns(paste0(pfx, "c")), tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "d")), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px"))
+          )
         )
       )
     )
@@ -43,23 +44,26 @@ riskDataUI <- function(id) {
           stratum_inputs(3),
 
           tags$hr(),
-          tags$div(class = "stratum-title", "Crude Data"),
-          tags$div(class = "stratum-grid",
-            tags$div(
-              tags$label("Cases (exposed)"),
-              numericInput(ns("cr_a"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Total exposed"),
-              numericInput(ns("cr_N1"), NULL, value = NULL, min = 1, step = 1)
-            ),
-            tags$div(
-              tags$label("Cases (unexposed)"),
-              numericInput(ns("cr_c"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Total unexposed"),
-              numericInput(ns("cr_N0"), NULL, value = NULL, min = 1, step = 1)
+          tags$div(style = "margin-bottom: 12px;",
+            tags$div(class = "strata-label", "Crude Data"),
+            tags$table(class = "tbl",
+              tags$thead(tags$tr(
+                tags$th(class = "rh", ""),
+                tags$th("Cases"),
+                tags$th("Non-cases")
+              )),
+              tags$tbody(
+                tags$tr(
+                  tags$td(class = "cl", "Exposed"),
+                  tags$td(numericInput(ns("cr_a"), tags$span(class = "cell-lbl", "a"), value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_b"), tags$span(class = "cell-lbl", "b"), value = NA, min = 0, width = "70px"))
+                ),
+                tags$tr(
+                  tags$td(class = "cl", "Unexposed"),
+                  tags$td(numericInput(ns("cr_c"), tags$span(class = "cell-lbl", "c"), value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_d"), tags$span(class = "cell-lbl", "d"), value = NA, min = 0, width = "70px"))
+                )
+              )
             )
           ),
 
@@ -87,27 +91,21 @@ riskDataServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # Collect complete strata
     get_strata <- reactive({
       strata <- list()
       for (i in 1:3) {
         pfx <- paste0("s", i, "_")
         a  <- input[[paste0(pfx, "a")]]
-        N1 <- input[[paste0(pfx, "N1")]]
+        b  <- input[[paste0(pfx, "b")]]
         c  <- input[[paste0(pfx, "c")]]
-        N0 <- input[[paste0(pfx, "N0")]]
-        if (!is.null(a) && !is.null(N1) && !is.null(c) && !is.null(N0) &&
-            !is.na(a) && !is.na(N1) && !is.na(c) && !is.na(N0) &&
-            N1 > 0 && N0 > 0 && a <= N1 && c <= N0) {
-          strata[[length(strata) + 1]] <- list(a = a, N1 = N1, c = c, N0 = N0)
+        d  <- input[[paste0(pfx, "d")]]
+        if (!is.na(a) && !is.na(b) && !is.na(c) && !is.na(d)) {
+          N1 <- a + b
+          N0 <- c + d
+          if (N1 > 0 && N0 > 0 && a <= N1 && c <= N0) {
+            strata[[length(strata) + 1]] <- list(a = a, N1 = N1, c = c, N0 = N0)
+          }
         }
       }
       strata
@@ -211,20 +209,20 @@ riskDataServer <- function(id) {
       crude_RR   <- NA_real_
       crude_ci95 <- c(NA_real_, NA_real_)
       cr_a  <- input$cr_a
-      cr_N1 <- input$cr_N1
+      cr_b  <- input$cr_b
       cr_c  <- input$cr_c
-      cr_N0 <- input$cr_N0
-      if (!is.null(cr_a) && !is.null(cr_N1) && !is.null(cr_c) && !is.null(cr_N0) &&
-          !is.na(cr_a) && !is.na(cr_N1) && !is.na(cr_c) && !is.na(cr_N0) &&
-          cr_N1 > 0 && cr_N0 > 0 && cr_a > 0 && cr_c > 0 &&
-          cr_a <= cr_N1 && cr_c <= cr_N0) {
-        p1_cr      <- cr_a / cr_N1
-        p0_cr      <- cr_c / cr_N0
-        crude_RR   <- p1_cr / p0_cr
-        b_cr       <- cr_N1 - cr_a
-        d_cr       <- cr_N0 - cr_c
-        se_cr      <- sqrt(b_cr / (cr_a * cr_N1) + d_cr / (cr_c * cr_N0))
-        crude_ci95 <- exp(log(crude_RR) + c(-1, 1) * z95 * se_cr)
+      cr_d  <- input$cr_d
+      if (!is.na(cr_a) && !is.na(cr_b) && !is.na(cr_c) && !is.na(cr_d)) {
+        cr_N1 <- cr_a + cr_b
+        cr_N0 <- cr_c + cr_d
+        if (cr_N1 > 0 && cr_N0 > 0 && cr_a > 0 && cr_c > 0 &&
+            cr_a <= cr_N1 && cr_c <= cr_N0) {
+          p1_cr      <- cr_a / cr_N1
+          p0_cr      <- cr_c / cr_N0
+          crude_RR   <- p1_cr / p0_cr
+          se_cr      <- sqrt(cr_b / (cr_a * cr_N1) + cr_d / (cr_c * cr_N0))
+          crude_ci95 <- exp(log(crude_RR) + c(-1, 1) * z95 * se_cr)
+        }
       }
 
       list(
@@ -256,30 +254,37 @@ riskDataServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric("MH Risk Ratio",
+        metric_card("MH Risk Ratio",
                fmt4(r$RR_mh),
                paste0(r$n_strata, " strat",
                       if (r$n_strata == 1) "um" else "a", " pooled"),
-               "m-primary wide"),
-        metric("95% CI for Risk Ratio",
+               "m-primary wide",
+               tip = "Mantel-Haenszel pooled risk ratio. Weighted average of stratum-specific risk ratios."),
+        metric_card("95% CI for Risk Ratio",
                paste0(fmt4(r$ci_rr95[1]), " \u2013 ", fmt4(r$ci_rr95[2])),
-               cls = "m-blue"),
-        metric("99% CI for Risk Ratio",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled risk ratio."),
+        metric_card("99% CI for Risk Ratio",
                paste0(fmt4(r$ci_rr99[1]), " \u2013 ", fmt4(r$ci_rr99[2])),
-               cls = "m-blue"),
-        metric("Pooled Risk Difference",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled risk ratio."),
+        metric_card("Pooled Risk Difference",
                fmt4(r$RD_pool),
                paste0("95% CI: ", fmt4(r$ci_rd95[1]), "\u2013", fmt4(r$ci_rd95[2])),
-               cls = "m-teal"),
-        metric("99% CI for Risk Difference",
+               cls = "m-teal",
+               tip = "Mantel-Haenszel pooled absolute risk difference across strata."),
+        metric_card("99% CI for Risk Difference",
                paste0(fmt4(r$ci_rd99[1]), " \u2013 ", fmt4(r$ci_rd99[2])),
-               cls = "m-teal"),
-        metric("P for Homogeneity",
+               cls = "m-teal",
+               tip = "Confidence interval for the pooled risk difference."),
+        metric_card("P for Homogeneity",
                hom_text,
-               cls = "m-purple"),
-        metric("Crude Risk Ratio",
+               cls = "m-purple",
+               tip = "Woolf chi-square test for heterogeneity. Tests whether the risk ratio is the same across strata."),
+        metric_card("Crude Risk Ratio",
                crude_text,
-               cls = "m-blue")
+               cls = "m-blue",
+               tip = "Unadjusted risk ratio from the crude (unstratified) data.")
       )
     })
 

@@ -4,27 +4,29 @@ rateDataUI <- function(id) {
   ns <- NS(id)
 
   # Helper: one stratum block
-  stratum_inputs <- function(i, optional = TRUE) {
+  # Columns: Cases / Person-time; Rows: Exposed / Unexposed
+  stratum_inputs <- function(i) {
     lbl <- paste0("Stratum ", i)
     pfx <- paste0("s", i, "_")
-    tags$div(class = "stratum-block",
-      tags$div(class = "stratum-title", lbl),
-      tags$div(class = "stratum-grid",
-        tags$div(
-          tags$label("Cases (exposed)"),
-          numericInput(ns(paste0(pfx, "a")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Person-time (exposed)"),
-          numericInput(ns(paste0(pfx, "T1")), NULL, value = NULL, min = 0)
-        ),
-        tags$div(
-          tags$label("Cases (unexposed)"),
-          numericInput(ns(paste0(pfx, "b")), NULL, value = NULL, min = 0, step = 1)
-        ),
-        tags$div(
-          tags$label("Person-time (unexposed)"),
-          numericInput(ns(paste0(pfx, "T0")), NULL, value = NULL, min = 0)
+    tags$div(style = "margin-bottom: 12px;",
+      tags$div(class = "strata-label", lbl),
+      tags$table(class = "tbl",
+        tags$thead(tags$tr(
+          tags$th(class = "rh", ""),
+          tags$th("Cases"),
+          tags$th("Person-time")
+        )),
+        tags$tbody(
+          tags$tr(
+            tags$td(class = "cl", "Exposed"),
+            tags$td(numericInput(ns(paste0(pfx, "a")),  tags$span(class = "cell-lbl", "a"),  value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "T1")), tags$span(class = "cell-lbl", "T\u2081"), value = NA, min = 0, width = "70px"))
+          ),
+          tags$tr(
+            tags$td(class = "cl", "Unexposed"),
+            tags$td(numericInput(ns(paste0(pfx, "b")),  tags$span(class = "cell-lbl", "b"),  value = NA, min = 0, width = "70px")),
+            tags$td(numericInput(ns(paste0(pfx, "T0")), tags$span(class = "cell-lbl", "T\u2080"), value = NA, min = 0, width = "70px"))
+          )
         )
       )
     )
@@ -38,28 +40,31 @@ rateDataUI <- function(id) {
         tags$div(class = "panel-head ph-teal", "Input"),
         tags$div(class = "panel-body",
 
-          stratum_inputs(1, optional = FALSE),
+          stratum_inputs(1),
           stratum_inputs(2),
           stratum_inputs(3),
 
           tags$hr(),
-          tags$div(class = "stratum-title", "Crude Data"),
-          tags$div(class = "stratum-grid",
-            tags$div(
-              tags$label("Cases (exposed)"),
-              numericInput(ns("cr_a"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Person-time (exposed)"),
-              numericInput(ns("cr_T1"), NULL, value = NULL, min = 0)
-            ),
-            tags$div(
-              tags$label("Cases (unexposed)"),
-              numericInput(ns("cr_b"), NULL, value = NULL, min = 0, step = 1)
-            ),
-            tags$div(
-              tags$label("Person-time (unexposed)"),
-              numericInput(ns("cr_T0"), NULL, value = NULL, min = 0)
+          tags$div(style = "margin-bottom: 12px;",
+            tags$div(class = "strata-label", "Crude Data"),
+            tags$table(class = "tbl",
+              tags$thead(tags$tr(
+                tags$th(class = "rh", ""),
+                tags$th("Cases"),
+                tags$th("Person-time")
+              )),
+              tags$tbody(
+                tags$tr(
+                  tags$td(class = "cl", "Exposed"),
+                  tags$td(numericInput(ns("cr_a"),  tags$span(class = "cell-lbl", "a"),  value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_T1"), tags$span(class = "cell-lbl", "T\u2081"), value = NA, min = 0, width = "70px"))
+                ),
+                tags$tr(
+                  tags$td(class = "cl", "Unexposed"),
+                  tags$td(numericInput(ns("cr_b"),  tags$span(class = "cell-lbl", "b"),  value = NA, min = 0, width = "70px")),
+                  tags$td(numericInput(ns("cr_T0"), tags$span(class = "cell-lbl", "T\u2080"), value = NA, min = 0, width = "70px"))
+                )
+              )
             )
           ),
 
@@ -87,14 +92,6 @@ rateDataServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    metric <- function(label, value, sub = NULL, cls = "m-blue") {
-      tags$div(class = paste("metric", cls),
-        tags$div(class = "metric-label", label),
-        tags$div(class = "metric-value", value),
-        if (!is.null(sub)) tags$div(class = "metric-sub", sub)
-      )
-    }
-
     # Collect stratum data — returns list of complete strata (all 4 fields non-NA and valid)
     get_strata <- reactive({
       strata <- list()
@@ -104,8 +101,7 @@ rateDataServer <- function(id) {
         T1 <- input[[paste0(pfx, "T1")]]
         b  <- input[[paste0(pfx, "b")]]
         T0 <- input[[paste0(pfx, "T0")]]
-        if (!is.null(a) && !is.null(T1) && !is.null(b) && !is.null(T0) &&
-            !is.na(a) && !is.na(T1) && !is.na(b) && !is.na(T0) &&
+        if (!is.na(a) && !is.na(T1) && !is.na(b) && !is.na(T0) &&
             T1 > 0 && T0 > 0) {
           strata[[length(strata) + 1]] <- list(a = a, T1 = T1, b = b, T0 = T0)
         }
@@ -173,8 +169,7 @@ rateDataServer <- function(id) {
       cr_T1 <- input$cr_T1
       cr_b  <- input$cr_b
       cr_T0 <- input$cr_T0
-      if (!is.null(cr_a) && !is.null(cr_T1) && !is.null(cr_b) && !is.null(cr_T0) &&
-          !is.na(cr_a) && !is.na(cr_T1) && !is.na(cr_b) && !is.na(cr_T0) &&
+      if (!is.na(cr_a) && !is.na(cr_T1) && !is.na(cr_b) && !is.na(cr_T0) &&
           cr_T1 > 0 && cr_T0 > 0 && cr_b > 0 && cr_a > 0) {
         crude_RR   <- (cr_a / cr_T1) / (cr_b / cr_T0)
         se_cr      <- sqrt(1/cr_a + 1/cr_b)
@@ -206,25 +201,31 @@ rateDataServer <- function(id) {
       }
 
       tags$div(class = "metrics",
-        metric("MH Rate Ratio",
+        metric_card("MH Rate Ratio",
                fmt4(r$RR_mh),
                paste0(r$n_strata, " strat", if (r$n_strata == 1) "um" else "a", " pooled"),
-               "m-primary wide"),
-        metric("95% Confidence Interval",
+               "m-primary wide",
+               tip = "Mantel-Haenszel pooled rate ratio across strata. Weighted average of stratum-specific rate ratios."),
+        metric_card("95% Confidence Interval",
                paste0(fmt4(r$ci95[1]), " \u2013 ", fmt4(r$ci95[2])),
-               cls = "m-blue"),
-        metric("99% Confidence Interval",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled rate ratio."),
+        metric_card("99% Confidence Interval",
                paste0(fmt4(r$ci99[1]), " \u2013 ", fmt4(r$ci99[2])),
-               cls = "m-blue"),
-        metric("Variance of ln(RR)",
+               cls = "m-blue",
+               tip = "Taylor-series confidence interval for the pooled rate ratio."),
+        metric_card("Variance of ln(RR)",
                fmt4(r$var_ln),
-               cls = "m-teal"),
-        metric("P for Homogeneity",
+               cls = "m-teal",
+               tip = "Estimated variance of the natural log of the rate ratio. Used to compute confidence intervals."),
+        metric_card("P for Homogeneity",
                hom_text,
-               cls = "m-purple"),
-        metric("Crude Rate Ratio",
+               cls = "m-purple",
+               tip = "Chi-square test for heterogeneity across strata. Large value (small p) suggests the rate ratio differs between strata."),
+        metric_card("Crude Rate Ratio",
                crude_text,
-               cls = "m-teal")
+               cls = "m-teal",
+               tip = "Unadjusted rate ratio from the crude (unstratified) data.")
       )
     })
 
